@@ -15,4 +15,12 @@ export class CreateLotteryDto {
 
   @ApiProperty()
   quantity: number;
+
+  @ApiProperty({
+    type: 'array',
+    items: { type: 'string', format: 'binary' },
+    required: false,
+    description: 'Lottery images (upload files)'
+  })
+  images?: any;
 } 

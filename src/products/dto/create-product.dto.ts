@@ -11,7 +11,7 @@ export class CreateProductDto {
     type: 'array',
     items: { type: 'string', format: 'binary' },
     required: false,
-    description: 'Product images (upload files)',
+    description: 'Product images (upload files)'
   })
   images?: any;
 
