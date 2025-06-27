@@ -12,6 +12,9 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { DiscountsModule } from './discounts/discounts.module';
+import { DealsModule } from './deals/deals.module';
+import { CustomersModule } from './customers/customers.module';
 
 @Module({
   imports: [
@@ -40,6 +43,9 @@ import { InventoryModule } from './inventory/inventory.module';
     AuthModule,
     UserModule,
     InventoryModule,
+    DiscountsModule,
+    DealsModule,
+    CustomersModule,
   ],
 })
 export class AppModule {}
