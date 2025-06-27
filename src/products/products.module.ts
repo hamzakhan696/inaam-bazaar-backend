@@ -5,9 +5,10 @@ import { Category } from '../categories/categories.entity';
 import { ProductService } from './products.service';
 import { ProductController } from './products.controller';
 import { InventoryModule } from '../inventory/inventory.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Category]), InventoryModule],
+  imports: [TypeOrmModule.forFeature([Product, Category]), InventoryModule, StorageModule],
   controllers: [ProductController],
   providers: [ProductService],
   exports: [ProductService],

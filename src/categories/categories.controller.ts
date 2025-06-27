@@ -18,7 +18,7 @@ export class CategoryController {
     @Body() dto: CreateCategoryDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    dto.images = files?.map(file => file.originalname); // For now, just use originalname
+    dto.images = files; // Pass Multer file objects instead of just names
     // Parse productIds if it's a string (from multipart/form-data)
     if (typeof dto.productIds === 'string') {
       try {
