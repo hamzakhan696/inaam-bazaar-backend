@@ -12,10 +12,11 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
   imports: [
-  ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -40,6 +41,7 @@ import { InventoryModule } from './inventory/inventory.module';
     AuthModule,
     UserModule,
     InventoryModule,
+    WebhookModule,
   ],
 })
 export class AppModule {}
