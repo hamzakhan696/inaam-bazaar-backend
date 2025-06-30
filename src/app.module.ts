@@ -15,10 +15,12 @@ import { InventoryModule } from './inventory/inventory.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { DealsModule } from './deals/deals.module';
 import { CustomersModule } from './customers/customers.module';
+import { WebhookModule } from './webhook/webhook.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
-  ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env' }),
     EventEmitterModule.forRoot(),
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
@@ -46,6 +48,8 @@ import { CustomersModule } from './customers/customers.module';
     DiscountsModule,
     DealsModule,
     CustomersModule,
+    WebhookModule,
+    OrdersModule
   ],
 })
 export class AppModule {}

@@ -38,4 +38,7 @@ export class Product {
 
   @ManyToOne(() => Category)
   category: Category;
+
+  @Column({ default: 1 })
+  status: number;
 }
