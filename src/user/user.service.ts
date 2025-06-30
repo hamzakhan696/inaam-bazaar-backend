@@ -23,4 +23,8 @@ export class UserService {
     Object.assign(user, updateDto);
     return this.userRepo.save(user);
   }
+
+  async findByPhone(phone: string) {
+    return this.userRepo.findOne({ where: { contactNumber: Number(phone) } });
+  }
 } 
