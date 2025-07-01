@@ -49,13 +49,23 @@ export class ProductService {
     // Save inventory records with product relation
     if (Array.isArray(inventory)) {
       for (const inv of inventory) {
-        const record = new ProductInventory();
-        record.size = inv.size;
-        record.quantity = inv.quantity;
-        record.product = savedProduct;
-        await this.productRepo.manager.save(record);
+        if (inv && inv.size && inv.quantity) {
+          const record = new ProductInventory();
+          record.size = inv.size;
+          record.quantity = inv.quantity;
+          record.product = savedProduct;
+          await this.productRepo.manager.save(record);
+        }
       }
     }
+
+    // Add summary to main inventory table
+    await this.inventoryService.create(
+      savedProduct.title,
+      savedProduct.images && savedProduct.images.length > 0 ? savedProduct.images[0] : '',
+      savedProduct.totalQuantity
+    );
+
     return savedProduct;
   }
 
@@ -65,5 +75,19 @@ export class ProductService {
 
   findOne(id: number) {
     return this.productRepo.findOne({ where: { id }, relations: ['category', 'inventory'] });
+  }
+
+  async update(id: number, dto: CreateProductDto) {
+    const product = await this.productRepo.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    Object.assign(product, dto);
+    return this.productRepo.save(product);
+  }
+
+  async remove(id: number) {
+    const product = await this.productRepo.findOne({ where: { id } });
+    if (!product) throw new NotFoundException('Product not found');
+    await this.productRepo.remove(product);
+    return { message: 'Product deleted successfully' };
   }
 }

@@ -11,5 +11,6 @@ import { Deal } from "./deals/deals.entity";
 import { Customer } from "./customers/customers.entity";
 import { Order } from "./orders/order.entity";
 import { OrderItem } from "./orders/order-item.entity";
+import { ProductInventory } from "./products/product-inventory.entity";
 
-export const entities = [Category, Lottery, Product, CustomColor, User, Inventory, Discount, Deal, Customer, Order, OrderItem];
+export const entities = [Category, Lottery, Product, CustomColor, User, Inventory, Discount, Deal, Customer, Order, OrderItem, ProductInventory];

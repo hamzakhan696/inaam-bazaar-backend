@@ -26,4 +26,7 @@ export class CreateLotteryDto {
     description: 'Lottery images (upload files)'
   })
   images?: any;
+
+  @ApiProperty({ enum: ['active', 'inactive'], default: 'active', required: false })
+  status?: 'active' | 'inactive';
 } 

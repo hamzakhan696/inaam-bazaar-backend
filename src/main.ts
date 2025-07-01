@@ -1,40 +1,49 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ExpressAdapter } from '@nestjs/platform-express';
-import * as express from 'express';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import * as cookieParser from 'cookie-parser';
+import * as path from 'path';
+import { randomUUID } from 'crypto';
+import { ConfigService } from '@nestjs/config';
 
-// This function will be used by Vercel's serverless handler
-export async function createNestServer() {
-  const server = express();
-  // Create the NestJS app with Express adapter
-  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, 'crypto', {
+    value: { randomUUID },
+    configurable: false,
+    writable: false,
+  });
+}
 
-  // Swagger setup (needs Nest app, not Express)
+async function bootstrap() {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  const configService = app.get(ConfigService);
+
+  app.useGlobalPipes(new ValidationPipe());
+  app.use(cookieParser());
+  const staticFilesPath = path.resolve(__dirname, '..', 'files');
+  app.useStaticAssets(staticFilesPath);
+
+  const frontendUrl = configService.get<string>('FRONTEND_URL');
+  const origins = [frontendUrl].filter((url): url is string => !!url); // Type guard
+  console.log('origin :', origins);
+  app.enableCors({
+    origin: origins,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+    credentials: true,
+    allowedHeaders: 'Authorization, Content-Type',
+  });
+
   const config = new DocumentBuilder()
-    .setTitle('Inaam Bazaar API')
-    .setDescription('APIs for Products, Categories, Lotteries')
+    .setTitle('Inaam Bazar')
+    .setDescription('All the APIs required for Inaam Bazar')
     .setVersion('1.0')
+    .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-
-  await app.init();
-  // Return only the Express server for Vercel
-  return server;
+  await app.listen(3000);
 }
-
-// For local development: run as a normal server
-if (require.main === module) {
-  (async () => {
-    const app = await NestFactory.create(AppModule);
-    const config = new DocumentBuilder()
-      .setTitle('Inaam Bazaar API')
-      .setDescription('APIs for Products, Categories, Lotteries')
-      .setVersion('1.0')
-      .build();
-    const document = SwaggerModule.createDocument(app, config);
-    SwaggerModule.setup('api', app, document);
-    await app.listen(process.env.PORT ?? 3000);
-  })();
-}
+bootstrap();

@@ -83,4 +83,11 @@ export class CategoryService {
 
     return { message: 'Image deleted successfully' };
   }
+
+  async remove(id: number) {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) throw new NotFoundException('Category not found');
+    await this.categoryRepo.remove(category);
+    return { message: 'Category deleted successfully' };
+  }
 }

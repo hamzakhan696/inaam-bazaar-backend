@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Param, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { ProductService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -44,5 +44,39 @@ export class ProductController {
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Patch(':id')
+  @UseInterceptors(FilesInterceptor('images'))
+  update(
+    @Param('id') id: number,
+    @Body() dto: CreateProductDto,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    dto.images = files;
+    if (typeof dto.inventory === 'string') {
+      try {
+        dto.inventory = JSON.parse(dto.inventory);
+      } catch (e) {
+        dto.inventory = [];
+      }
+    } else if (Array.isArray(dto.inventory)) {
+      dto.inventory = dto.inventory.flatMap(item => {
+        if (typeof item === 'string') {
+          try {
+            return [JSON.parse(item)];
+          } catch {
+            return [];
+          }
+        }
+        return [item];
+      });
+    }
+    return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: number) {
+    return this.service.remove(id);
   }
 }

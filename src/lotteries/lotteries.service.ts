@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Lottery } from './lotteries.entity';
@@ -34,5 +34,26 @@ export class LotteryService {
 
   findOne(id: number) {
     return this.lotteryRepo.findOne({ where: { id } });
+  }
+
+  async update(id: number, dto: any) {
+    const lottery = await this.lotteryRepo.findOne({ where: { id } });
+    if (!lottery) throw new NotFoundException('Lottery not found');
+    Object.assign(lottery, dto);
+    return this.lotteryRepo.save(lottery);
+  }
+
+  async remove(id: number) {
+    const lottery = await this.lotteryRepo.findOne({ where: { id } });
+    if (!lottery) throw new NotFoundException('Lottery not found');
+    await this.lotteryRepo.remove(lottery);
+    return { message: 'Lottery deleted successfully' };
+  }
+
+  async updateStatus(id: number, status: 'active' | 'inactive') {
+    const lottery = await this.lotteryRepo.findOne({ where: { id } });
+    if (!lottery) throw new NotFoundException('Lottery not found');
+    lottery.status = status;
+    return this.lotteryRepo.save(lottery);
   }
 }

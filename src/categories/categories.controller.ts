@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { CategoryService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -18,20 +18,46 @@ export class CategoryController {
     @Body() dto: CreateCategoryDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
-    dto.images = files; // Pass Multer file objects instead of just names
-    // Parse productIds if it's a string (from multipart/form-data)
+    dto.images = files;
+
+    // Robust productIds parsing
     if (typeof dto.productIds === 'string') {
+      // Single value as string
       try {
-        dto.productIds = JSON.parse(dto.productIds);
+        const parsed = JSON.parse(dto.productIds);
+        dto.productIds = Array.isArray(parsed) ? parsed : [parsed];
       } catch {
-        dto.productIds = [];
+        dto.productIds = [Number(dto.productIds)];
       }
+    } else if (Array.isArray(dto.productIds)) {
+      // Array of strings or numbers
+      dto.productIds = dto.productIds.flatMap(item => {
+        if (typeof item === 'string') {
+          try {
+            const parsed = JSON.parse(item);
+            return Array.isArray(parsed) ? parsed : [parsed];
+          } catch {
+            return [Number(item)];
+          }
+        }
+        return [item];
+      });
+    } else if (typeof dto.productIds === 'number') {
+      dto.productIds = [dto.productIds];
+    } else {
+      dto.productIds = [];
     }
+
     return this.service.create(dto);
   }
 
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: number) {
+    return this.service.remove(id);
   }
 }
