@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Body, UploadedFiles, UseInterceptors, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { LotteryService } from './lotteries.service';
 import { CreateLotteryDto } from './dto/create-lottery.dto';
@@ -24,5 +24,10 @@ export class LotteryController {
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
   }
 }

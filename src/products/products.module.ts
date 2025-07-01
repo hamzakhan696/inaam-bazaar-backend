@@ -6,9 +6,10 @@ import { ProductService } from './products.service';
 import { ProductController } from './products.controller';
 import { InventoryModule } from '../inventory/inventory.module';
 import { StorageModule } from '../storage/storage.module';
+import { ProductInventory } from './product-inventory.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Product, Category]), InventoryModule, StorageModule],
+  imports: [TypeOrmModule.forFeature([Product, Category, ProductInventory]), InventoryModule, StorageModule],
   controllers: [ProductController],
   providers: [ProductService],
   exports: [ProductService],

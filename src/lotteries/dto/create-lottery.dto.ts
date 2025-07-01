@@ -16,6 +16,9 @@ export class CreateLotteryDto {
   @ApiProperty()
   quantity: number;
 
+  @ApiProperty()
+  price: number;
+
   @ApiProperty({
     type: 'array',
     items: { type: 'string', format: 'binary' },

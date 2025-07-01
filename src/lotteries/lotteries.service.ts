@@ -31,4 +31,8 @@ export class LotteryService {
   findAll() {
     return this.lotteryRepo.find();
   }
+
+  findOne(id: number) {
+    return this.lotteryRepo.findOne({ where: { id } });
+  }
 }

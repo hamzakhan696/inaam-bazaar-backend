@@ -19,6 +19,9 @@ export class Order {
   @Column({ type: 'enum', enum: ['fulfilled', 'unfulfilled', 'pending'], default: 'pending' })
   status: string;
 
+  @Column({ type: 'enum', enum: ['product', 'lottery'], default: 'product' })
+  orderType: string;
+
   @Column({ type: 'enum', enum: ['jazzcash', 'easypaisa', 'cod'] })
   paymentMethod: string;
 

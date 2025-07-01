@@ -35,7 +35,7 @@ import { OrdersModule } from './orders/orders.module';
         database: config.get<string>('DB_DATABASE'),
         synchronize: true,
         logging: true,
-        entities,
+        entities: [__dirname + '/**/*.entity.{js,ts}'],
       }),
     }),
     ProductsModule,

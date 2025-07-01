@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Category } from '../categories/categories.entity';
+import { ProductInventory } from './product-inventory.entity';
 
 @Entity()
 export class Product {
@@ -30,8 +31,8 @@ export class Product {
   @Column({ nullable: true })
   discount: number;
 
-  @Column()
-  inventory: number;
+  @Column({ nullable: true, default: 0 })
+  totalQuantity: number;
 
   @Column()
   categoryId: number;
@@ -41,4 +42,7 @@ export class Product {
 
   @Column({ default: 1 })
   status: number;
+
+  @OneToMany(() => ProductInventory, inv => inv.product, { cascade: true })
+  inventory: ProductInventory[];
 }

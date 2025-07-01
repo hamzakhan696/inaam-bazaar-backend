@@ -6,6 +6,7 @@ import { Category } from '../categories/categories.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { InventoryService } from '../inventory/inventory.service';
 import { StorageService } from '../storage/storage.service';
+import { ProductInventory } from './product-inventory.entity';
 
 @Injectable()
 export class ProductService {
@@ -30,23 +31,39 @@ export class ProductService {
         imagePaths.push(imagePath);
       }
     }
+    // Remove inventory from dto before saving product
+    const { inventory, ...rest } = dto;
+    let totalQuantity = 0;
+    if (Array.isArray(inventory)) {
+      totalQuantity = inventory.reduce((sum, inv) => sum + (Number(inv.quantity) || 0), 0);
+    }
     const productData = {
-      ...dto,
+      ...rest,
       categoryId: category.id,
       category,
       images: imagePaths,
+      totalQuantity,
     };
     const savedProduct = await this.productRepo.save(productData);
-    // Add to inventory
-    await this.inventoryService.create(
-      savedProduct.title,
-      savedProduct.images && savedProduct.images.length > 0 ? savedProduct.images[0] : '',
-      savedProduct.inventory,
-    );
+
+    // Save inventory records with product relation
+    if (Array.isArray(inventory)) {
+      for (const inv of inventory) {
+        const record = new ProductInventory();
+        record.size = inv.size;
+        record.quantity = inv.quantity;
+        record.product = savedProduct;
+        await this.productRepo.manager.save(record);
+      }
+    }
     return savedProduct;
   }
 
   findAll() {
-    return this.productRepo.find({ relations: ['category'] });
+    return this.productRepo.find({ relations: ['category', 'inventory'] });
+  }
+
+  findOne(id: number) {
+    return this.productRepo.findOne({ where: { id }, relations: ['category', 'inventory'] });
   }
 }

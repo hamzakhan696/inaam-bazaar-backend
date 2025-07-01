@@ -19,4 +19,10 @@ export class Lottery {
 
   @Column()
   quantity: number;
+
+  @Column({ type: 'float', nullable: false })
+  price: number;
+
+  @Column('simple-array', { nullable: true })
+  images: string[];
 }

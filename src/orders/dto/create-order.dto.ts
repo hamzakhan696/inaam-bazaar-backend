@@ -21,6 +21,9 @@ export class CreateOrderDto {
   @ApiProperty({ type: [CreateOrderItemDto] })
   items: CreateOrderItemDto[];
 
+  @ApiProperty({ enum: ['product', 'lottery'] })
+  orderType: string;
+
   @ApiProperty({ enum: ['jazzcash', 'easypaisa', 'cod'] })
   paymentMethod: string;
 

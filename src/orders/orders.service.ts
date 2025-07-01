@@ -24,6 +24,27 @@ export class OrdersService {
       paymentStatus: 'unpaid',
     });
     order.items = createOrderDto.items.map(item => this.orderItemRepository.create(item));
+
+    // Payment gateway integration logic
+    switch (createOrderDto.paymentMethod) {
+      case 'jazzcash':
+        // TODO: Integrate JazzCash payment gateway here
+        // Example: await this.processJazzCashPayment(order);
+        break;
+      case 'easypaisa':
+        // TODO: Integrate EasyPaisa payment gateway here
+        // Example: await this.processEasyPaisaPayment(order);
+        break;
+      case 'cod':
+        // Cash on Delivery, no online payment needed
+        break;
+      default:
+        throw new Error('Invalid payment method');
+    }
+
+    // Order type logic (for future use, e.g., notifications, analytics)
+    // order.orderType will be 'product' or 'lottery'
+
     return this.orderRepository.save(order);
   }
 

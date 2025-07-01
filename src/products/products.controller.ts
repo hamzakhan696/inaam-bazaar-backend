@@ -19,6 +19,25 @@ export class ProductController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     dto.images = files;
+    // Always parse inventory as JSON if it's a string or array of strings
+    if (typeof dto.inventory === 'string') {
+      try {
+        dto.inventory = JSON.parse(dto.inventory);
+      } catch (e) {
+        dto.inventory = [];
+      }
+    } else if (Array.isArray(dto.inventory)) {
+      dto.inventory = dto.inventory.flatMap(item => {
+        if (typeof item === 'string') {
+          try {
+            return [JSON.parse(item)];
+          } catch {
+            return [];
+          }
+        }
+        return [item];
+      });
+    }
     return this.service.create(dto);
   }
 
