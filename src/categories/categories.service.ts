@@ -14,29 +14,25 @@ export class CategoryService {
   ) {}
 
   async create(dto: CreateCategoryDto): Promise<Category> {
-    // Initialize an array to store image paths
     const imagePaths: string[] = [];
-
-    // Handle image uploads if provided
+  
     if (dto.images && Array.isArray(dto.images)) {
       for (const image of dto.images) {
         const imagePath = await this.storageService.uploadFile(image, 'category_images');
         imagePaths.push(imagePath);
       }
     }
-
-    // Prepare category data
+  
     const categoryData = {
       name: dto.name,
       description: dto.description || '',
-      productIds: Array.isArray(dto.productIds) ? dto.productIds : [],
-      images: imagePaths, // Store the array of image paths
+      productIds: Array.isArray(dto.productIds) ? dto.productIds : [], // Ensure productIds is always an array
+      images: imagePaths,
     };
-
-    // Save the category to the database
+  
     const category = this.categoryRepo.create(categoryData);
     return await this.categoryRepo.save(category);
-  }
+  } 
 
   async findAll(): Promise<Category[]> {
     return this.categoryRepo.find();

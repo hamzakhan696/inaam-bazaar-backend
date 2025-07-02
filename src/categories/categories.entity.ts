@@ -14,6 +14,6 @@ export class Category {
   @Column()
   description: string;
 
-  @Column('json', { nullable: true })
+  @Column('simple-array', { nullable: true })
   productIds: number[];
 }

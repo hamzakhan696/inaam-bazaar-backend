@@ -36,7 +36,7 @@ import { AdminAuthModule } from './admin-auth/admin-auth.module';
         database: config.get<string>('DB_DATABASE'),
         synchronize: true,
         logging: true,
-        entities: [__dirname + '/**/*.entity.{js,ts}'],
+        entities
       }),
     }),
     ProductsModule,

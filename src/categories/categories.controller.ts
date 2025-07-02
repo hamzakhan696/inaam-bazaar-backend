@@ -11,46 +11,55 @@ export class CategoryController {
   constructor(private readonly service: CategoryService) {}
 
   @Post()
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: CreateCategoryDto })
-  @UseInterceptors(FilesInterceptor('images'))
-  create(
-    @Body() dto: CreateCategoryDto,
-    @UploadedFiles() files: Express.Multer.File[],
-  ) {
-    dto.images = files;
+@ApiConsumes('multipart/form-data')
+@ApiBody({ type: CreateCategoryDto })
+@UseInterceptors(FilesInterceptor('images'))
+create(
+  @Body() dto: CreateCategoryDto,
+  @UploadedFiles() files: Express.Multer.File[],
+) {
+  dto.images = files;
 
-    // Robust productIds parsing
-    if (typeof dto.productIds === 'string') {
-      // Single value as string
-      try {
-        const parsed = JSON.parse(dto.productIds);
-        dto.productIds = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        dto.productIds = [Number(dto.productIds)];
-      }
-    } else if (Array.isArray(dto.productIds)) {
-      // Array of strings or numbers
-      dto.productIds = dto.productIds.flatMap(item => {
-        if (typeof item === 'string') {
-          try {
-            const parsed = JSON.parse(item);
-            return Array.isArray(parsed) ? parsed : [parsed];
-          } catch {
-            return [Number(item)];
-          }
-        }
-        return [item];
-      });
-    } else if (typeof dto.productIds === 'number') {
-      dto.productIds = [dto.productIds];
-    } else {
-      dto.productIds = [];
-    }
+  // Handle productIds as a string or array
+  let productIdsValue: string | number[] = dto.productIds || ''; // Default to empty string if undefined
 
-    return this.service.create(dto);
+  // If productIds is an array, convert to string for consistency with form data
+  if (Array.isArray(productIdsValue)) {
+    productIdsValue = productIdsValue.join(',');
   }
 
+  // Parse comma-separated string into array of numbers
+  if (typeof productIdsValue === 'string' && productIdsValue.includes(',')) {
+    dto.productIds = productIdsValue.split(',').map(item => {
+      const trimmed = item.trim();
+      return isNaN(Number(trimmed)) ? null : Number(trimmed);
+    }).filter((item): item is number => item !== null); // Type guard
+  } else if (typeof productIdsValue === 'string') {
+    try {
+      const parsed = JSON.parse(productIdsValue);
+      dto.productIds = Array.isArray(parsed) ? parsed : [parsed];
+    } catch {
+      dto.productIds = [Number(productIdsValue)];
+    }
+  } else if (Array.isArray(productIdsValue)) {
+    // Explicitly type the array case
+    dto.productIds = (productIdsValue as number[]).flatMap(item => {
+      if (typeof item === 'string') {
+        try {
+          const parsed = JSON.parse(item);
+          return Array.isArray(parsed) ? parsed : [parsed];
+        } catch {
+          return [Number(item)];
+        }
+      }
+      return [item];
+    });
+  } else {
+    dto.productIds = []; // Default to empty array
+  }
+
+  return this.service.create(dto);
+}
   @Get()
   findAll() {
     return this.service.findAll();
