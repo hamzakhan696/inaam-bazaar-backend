@@ -79,4 +79,9 @@ export class ProductController {
   remove(@Param('id') id: number) {
     return this.service.remove(id);
   }
+
+  @Get(':id')
+  findOne(@Param('id') id: number) {
+    return this.service.findOne(id);
+  }
 }

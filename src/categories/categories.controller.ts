@@ -4,11 +4,15 @@ import { CategoryService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { Express } from 'express';
+import { ProductService } from '../products/products.service';
 
 @ApiTags('categories')
 @Controller('categories')
 export class CategoryController {
-  constructor(private readonly service: CategoryService) {}
+  constructor(
+    private readonly service: CategoryService,
+    private readonly productService: ProductService,
+  ) {}
 
   @Post()
 @ApiConsumes('multipart/form-data')
@@ -68,5 +72,12 @@ create(
   @Delete(':id')
   remove(@Param('id') id: number) {
     return this.service.remove(id);
+  }
+
+  @Get(':id/products')
+  async getCategoryProducts(@Param('id') id: number) {
+    const category = await this.service.findOne(id);
+    if (!category || !category.productIds) return [];
+    return this.productService.findByIds(category.productIds);
   }
 }

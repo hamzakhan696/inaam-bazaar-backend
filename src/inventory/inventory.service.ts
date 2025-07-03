@@ -18,4 +18,8 @@ export class InventoryService {
   async findAll(): Promise<Inventory[]> {
     return this.inventoryRepository.find();
   }
+
+  async deleteByProductName(productName: string) {
+    await this.inventoryRepository.delete({ productName });
+  }
 } 

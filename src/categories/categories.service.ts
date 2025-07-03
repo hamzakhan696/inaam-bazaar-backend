@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 import { Category } from './categories.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { StorageService } from '../storage/storage.service'; // Import StorageService
+import { ProductService } from '../products/products.service'; // Import ProductService
+import { Product } from '../products/products.entity';
 
 @Injectable()
 export class CategoryService {
@@ -11,6 +13,7 @@ export class CategoryService {
     @InjectRepository(Category)
     private categoryRepo: Repository<Category>,
     private readonly storageService: StorageService, // Inject StorageService
+    private readonly productService: ProductService, // Inject ProductService
   ) {}
 
   async create(dto: CreateCategoryDto): Promise<Category> {
@@ -34,8 +37,20 @@ export class CategoryService {
     return await this.categoryRepo.save(category);
   } 
 
-  async findAll(): Promise<Category[]> {
-    return this.categoryRepo.find();
+  async findAll(): Promise<any[]> {
+    const categories = await this.categoryRepo.find();
+    const result: any[] = [];
+    for (const category of categories) {
+      const count = Array.isArray(category.productIds) ? category.productIds.length : 0;
+      result.push({
+        id: category.id,
+        name: category.name,
+        images: category.images,
+        description: category.description,
+        productsCount: count,
+      });
+    }
+    return result;
   }
 
   // Optional: Method to update category images
@@ -85,5 +100,9 @@ export class CategoryService {
     if (!category) throw new NotFoundException('Category not found');
     await this.categoryRepo.remove(category);
     return { message: 'Category deleted successfully' };
+  }
+
+  async findOne(id: number) {
+    return this.categoryRepo.findOne({ where: { id } });
   }
 }

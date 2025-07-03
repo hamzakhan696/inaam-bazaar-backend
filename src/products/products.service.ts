@@ -87,7 +87,25 @@ export class ProductService {
   async remove(id: number) {
     const product = await this.productRepo.findOne({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
+
+    // Delete from inventory table as well
+    await this.inventoryService.deleteByProductName(product.title);
+
+    // Remove productId from all categories' productIds arrays
+    const categories = await this.categoryRepo.find();
+    for (const category of categories) {
+      if (Array.isArray(category.productIds) && category.productIds.includes(id)) {
+        category.productIds = category.productIds.filter(pid => pid !== id);
+        await this.categoryRepo.save(category);
+      }
+    }
+
     await this.productRepo.remove(product);
     return { message: 'Product deleted successfully' };
+  }
+
+  async findByIds(ids: number[]) {
+    if (!ids || !ids.length) return [];
+    return this.productRepo.findByIds(ids);
   }
 }
