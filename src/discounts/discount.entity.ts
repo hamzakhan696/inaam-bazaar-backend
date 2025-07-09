@@ -11,11 +11,11 @@ export class Discount {
   @Column()
   discountValue: number;
 
-  @Column({ nullable: true })
-  categoryId?: number;
+  @Column('json', { nullable: true })
+  categoryIds: number[];
 
-  @Column({ nullable: true })
-  productId?: number;
+  @Column('json', { nullable: true })
+  productIds: number[];
 
   @Column()
   maximumDiscountUses: number;

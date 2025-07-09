@@ -31,18 +31,30 @@ export class ProductService {
         imagePaths.push(imagePath);
       }
     }
+    // Map images and colors
+    const imagesWithColors = imagePaths.map((url, idx) => ({
+      url,
+      color: dto.colors && dto.colors[idx] ? dto.colors[idx] : '',
+    }));
     // Remove inventory from dto before saving product
     const { inventory, ...rest } = dto;
     let totalQuantity = 0;
     if (Array.isArray(inventory)) {
       totalQuantity = inventory.reduce((sum, inv) => sum + (Number(inv.quantity) || 0), 0);
     }
+    let isArrival = false;
+    if (typeof dto.isArrival === 'string' && dto.isArrival) {
+      isArrival = (dto.isArrival as string).toLowerCase() === 'true';
+    } else if (typeof dto.isArrival === 'boolean') {
+      isArrival = dto.isArrival;
+    }
     const productData = {
       ...rest,
       categoryId: category.id,
       category,
-      images: imagePaths,
+      images: imagesWithColors,
       totalQuantity,
+      isArrival,
     };
     const savedProduct = await this.productRepo.save(productData);
 
@@ -62,7 +74,7 @@ export class ProductService {
     // Add summary to main inventory table
     await this.inventoryService.create(
       savedProduct.title,
-      savedProduct.images && savedProduct.images.length > 0 ? savedProduct.images[0] : '',
+      savedProduct.images && savedProduct.images.length > 0 ? savedProduct.images[0].url : '',
       savedProduct.totalQuantity
     );
 
@@ -92,13 +104,7 @@ export class ProductService {
     await this.inventoryService.deleteByProductName(product.title);
 
     // Remove productId from all categories' productIds arrays
-    const categories = await this.categoryRepo.find();
-    for (const category of categories) {
-      if (Array.isArray(category.productIds) && category.productIds.includes(id)) {
-        category.productIds = category.productIds.filter(pid => pid !== id);
-        await this.categoryRepo.save(category);
-      }
-    }
+    // (No longer needed, as ORM relation handles this)
 
     await this.productRepo.remove(product);
     return { message: 'Product deleted successfully' };
@@ -107,5 +113,9 @@ export class ProductService {
   async findByIds(ids: number[]) {
     if (!ids || !ids.length) return [];
     return this.productRepo.findByIds(ids);
+  }
+
+  async findByArrival(isArrival: boolean) {
+    return this.productRepo.find({ where: { isArrival }, relations: ['category', 'inventory'] });
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Delete, Param, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Delete, Param, Body, UploadedFiles, UseInterceptors, Patch } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { CategoryService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -76,8 +76,14 @@ create(
 
   @Get(':id/products')
   async getCategoryProducts(@Param('id') id: number) {
-    const category = await this.service.findOne(id);
-    if (!category || !category.productIds) return [];
-    return this.productService.findByIds(category.productIds);
+    const category = await this.service.findOneWithProducts(id);
+    if (!category || !category.products) return [];
+    return category.products;
+  }
+
+  @Patch(':id')
+  @ApiBody({ type: CreateCategoryDto })
+  async updateCategory(@Param('id') id: number, @Body() dto: CreateCategoryDto) {
+    return this.service.update(id, dto);
   }
 }
