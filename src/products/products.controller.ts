@@ -1,5 +1,5 @@
-import { Controller, Post, Get, Patch, Delete, Param, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
-import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { Controller, Post, Get, Patch, Delete, Param, Body, UploadedFiles, UseInterceptors, Query, ParseBoolPipe, DefaultValuePipe } from '@nestjs/common';
+import { ApiTags, ApiBody, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { ProductService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
@@ -12,13 +12,21 @@ export class ProductController {
 
   @Post()
   @ApiConsumes('multipart/form-data')
-  @ApiBody({ type: CreateProductDto })
   @UseInterceptors(FilesInterceptor('images'))
-  create(
+  @ApiBody({ type: CreateProductDto })
+  async create(
     @Body() dto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
+    // Handle colors as array or comma separated string
+    let colors: string[] = [];
+    if (typeof dto.colors === 'string') {
+      colors = (dto.colors as string).split(',').map(c => c.trim());
+    } else if (Array.isArray(dto.colors)) {
+      colors = dto.colors;
+    }
     dto.images = files;
+    dto.colors = colors;
     // Always parse inventory as JSON if it's a string or array of strings
     if (typeof dto.inventory === 'string') {
       try {
@@ -42,8 +50,18 @@ export class ProductController {
   }
 
   @Get()
-  findAll() {
-    return this.service.findAll();
+  @ApiQuery({ name: 'isArrival', required: false, type: String, description: 'Filter by new arrival (true/false)' })
+  async findAll(@Query('isArrival') isArrival?: string) {
+    if (typeof isArrival === 'undefined' || isArrival === null || isArrival === '') {
+      return this.service.findAll();
+    }
+    if (isArrival === 'true') {
+      return this.service.findByArrival(true);
+    } else if (isArrival === 'false') {
+      return this.service.findByArrival(false);
+    } else {
+      return this.service.findAll();
+    }
   }
 
   @Patch(':id')

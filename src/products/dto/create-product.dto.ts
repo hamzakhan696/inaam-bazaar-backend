@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 class InventoryDto {
   @ApiProperty()
@@ -14,16 +14,11 @@ export class CreateProductDto {
   @ApiProperty()
   description: string;
 
-  @ApiProperty({
-    type: 'array',
-    items: { type: 'string', format: 'binary' },
-    required: false,
-    description: 'Product images (upload files)'
-  })
+  @ApiPropertyOptional({ type: 'string', format: 'binary', isArray: true, description: 'Product images (upload files)' })
   images?: any;
 
-  @ApiProperty({ required: false })
-  color?: string;
+  @ApiPropertyOptional({ type: [String], description: 'Colors for each image, e.g. ["red", "blue"] or comma separated' })
+  colors?: string[];
 
   @ApiProperty({ type: [String], required: false })
   sizes?: string[];
@@ -42,4 +37,7 @@ export class CreateProductDto {
 
   @ApiProperty()
   categoryId: number;
+
+  @ApiPropertyOptional()
+  isArrival?: boolean;
 } 

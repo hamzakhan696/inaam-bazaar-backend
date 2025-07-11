@@ -16,4 +16,8 @@ export class AuthService {
     // Update user by email
     return this.userService.update(email, updateSignUpDto);
   }
+
+  public getUserService() {
+    return this.userService;
+  }
 } 

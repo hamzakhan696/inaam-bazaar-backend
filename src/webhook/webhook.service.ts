@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { UserService } from '../user/user.service';
-// import { AuthService } from '../auth/auth.service';
-import { sendWhatsAppSignupTemplate } from '../utils/whatsapp-message.util';
-import { UserModule } from '../user/user.module';
+import { sendWhatsAppSignupTemplate, sendWhatsAppLoginTemplate } from '../utils/whatsapp-message.util';
+import { ConfigService } from '@nestjs/config';
+import * as jwt from 'jsonwebtoken';
 
 @Injectable()
 export class WebhookService {
@@ -10,7 +10,7 @@ export class WebhookService {
 
   constructor(
     private readonly userService: UserService,
-    // private readonly authService: AuthService,
+    private readonly configService: ConfigService,
   ) {}
 
   async handleIncomingMessage(body: any) {
@@ -22,10 +22,12 @@ export class WebhookService {
     const user = await this.userService.findByPhone?.(from);
 
     if (user) {
-      // User exists, send dummy login deep link (plain text for now)
-      // TODO: Implement login template if needed
-      // For now, just log or send a plain text message if required
-      this.logger.log(`User exists: ${from}. Implement login template if needed.`);
+      // User exists, generate login token and send login link
+      const payload = { id: user.id, contactNumber: user.contactNumber };
+      const secret = this.configService.get<string>('JWT_SECRET') || 'default_jwt_secret';
+      const token = jwt.sign(payload, secret, { expiresIn: '10m' });
+      await sendWhatsAppLoginTemplate(from, token);
+      this.logger.log(`User exists: ${from}. Sent WhatsApp login link.`);
     } else {
       // User not found, send signup template
       await sendWhatsAppSignupTemplate(from);

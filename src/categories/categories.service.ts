@@ -38,10 +38,10 @@ export class CategoryService {
   } 
 
   async findAll(): Promise<any[]> {
-    const categories = await this.categoryRepo.find();
+    const categories = await this.categoryRepo.find({ relations: ['products'] });
     const result: any[] = [];
     for (const category of categories) {
-      const count = Array.isArray(category.productIds) ? category.productIds.length : 0;
+      const count = Array.isArray(category.products) ? category.products.length : 0;
       result.push({
         id: category.id,
         name: category.name,
@@ -104,5 +104,16 @@ export class CategoryService {
 
   async findOne(id: number) {
     return this.categoryRepo.findOne({ where: { id } });
+  }
+
+  async update(id: number, dto: any): Promise<Category> {
+    const category = await this.categoryRepo.findOne({ where: { id } });
+    if (!category) throw new NotFoundException('Category not found');
+    Object.assign(category, dto);
+    return this.categoryRepo.save(category);
+  }
+
+  async findOneWithProducts(id: number) {
+    return this.categoryRepo.findOne({ where: { id }, relations: ['products'] });
   }
 }
