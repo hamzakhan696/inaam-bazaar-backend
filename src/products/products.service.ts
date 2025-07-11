@@ -19,6 +19,28 @@ export class ProductService {
     private readonly storageService: StorageService,
   ) {}
 
+  // Helper method to process image URLs
+  private async processImageUrls(images: { url: string, color: string }[]): Promise<{ url: string, color: string }[]> {
+    if (!images || !Array.isArray(images)) return [];
+    
+    const processedImages: { url: string, color: string }[] = [];
+    for (const image of images) {
+      try {
+        // Convert file path to permanent public URL (doesn't expire)
+        const imageUrl = await this.storageService.getPublicUrl(image.url);
+        processedImages.push({
+          url: imageUrl,
+          color: image.color || ''
+        });
+      } catch (error) {
+        console.error(`Failed to process image URL: ${image.url}`, error);
+        // Keep original URL if processing fails
+        processedImages.push(image);
+      }
+    }
+    return processedImages;
+  }
+
   async create(dto: CreateProductDto) {
     const category = await this.categoryRepo.findOneBy({ id: dto.categoryId });
     if (!category) {
@@ -81,19 +103,80 @@ export class ProductService {
     return savedProduct;
   }
 
-  findAll() {
-    return this.productRepo.find({ relations: ['category', 'inventory'] });
+  async findAll() {
+    const products = await this.productRepo.find({ relations: ['category', 'inventory'] });
+    
+    // Process image URLs for all products
+    const processedProducts = await Promise.all(
+      products.map(async (product) => {
+        if (product.images) {
+          product.images = await this.processImageUrls(product.images);
+        }
+        return product;
+      })
+    );
+    
+    return processedProducts;
   }
 
-  findOne(id: number) {
-    return this.productRepo.findOne({ where: { id }, relations: ['category', 'inventory'] });
+  async findOne(id: number) {
+    const product = await this.productRepo.findOne({ where: { id }, relations: ['category', 'inventory'] });
+    
+    if (product && product.images) {
+      product.images = await this.processImageUrls(product.images);
+    }
+    
+    return product;
   }
 
   async update(id: number, dto: CreateProductDto) {
     const product = await this.productRepo.findOne({ where: { id } });
     if (!product) throw new NotFoundException('Product not found');
-    Object.assign(product, dto);
-    return this.productRepo.save(product);
+
+    // Preserve old images if not updating
+    let newImages = product.images || [];
+    if (dto.images && Array.isArray(dto.images) && dto.images.length > 0) {
+      // Upload new images
+      const imagePaths: string[] = [];
+      for (const image of dto.images) {
+        const imagePath = await this.storageService.uploadFile(image, 'product_images');
+        imagePaths.push(imagePath);
+      }
+      // Map new images with colors
+      let colors: string[] = [];
+      if (Array.isArray(dto.colors)) {
+        colors = dto.colors as string[];
+      } else if (typeof dto.colors === 'string') {
+        colors = (dto.colors as string).split(',').map(c => c.trim());
+      }
+      newImages = imagePaths.map((url, idx) => ({
+        url,
+        color: colors[idx] || '',
+      }));
+    }
+    // If no new images provided, keep the old images
+    // (already handled by initializing newImages above)
+
+    // Update product data while preserving images if no new ones provided
+    const updateData: any = {
+      ...dto,
+      images: newImages,
+    };
+
+    // Remove inventory from update data as it's handled separately
+    if (updateData.inventory) {
+      updateData.inventory = undefined;
+    }
+
+    Object.assign(product, updateData);
+    const updatedProduct = await this.productRepo.save(product);
+
+    // Process image URLs for response
+    if (updatedProduct.images) {
+      updatedProduct.images = await this.processImageUrls(updatedProduct.images);
+    }
+
+    return updatedProduct;
   }
 
   async remove(id: number) {
@@ -112,10 +195,34 @@ export class ProductService {
 
   async findByIds(ids: number[]) {
     if (!ids || !ids.length) return [];
-    return this.productRepo.findByIds(ids);
+    const products = await this.productRepo.findByIds(ids);
+    
+    // Process image URLs for all products
+    const processedProducts = await Promise.all(
+      products.map(async (product) => {
+        if (product.images) {
+          product.images = await this.processImageUrls(product.images);
+        }
+        return product;
+      })
+    );
+    
+    return processedProducts;
   }
 
   async findByArrival(isArrival: boolean) {
-    return this.productRepo.find({ where: { isArrival }, relations: ['category', 'inventory'] });
+    const products = await this.productRepo.find({ where: { isArrival }, relations: ['category', 'inventory'] });
+    
+    // Process image URLs for all products
+    const processedProducts = await Promise.all(
+      products.map(async (product) => {
+        if (product.images) {
+          product.images = await this.processImageUrls(product.images);
+        }
+        return product;
+      })
+    );
+    
+    return processedProducts;
   }
 }
