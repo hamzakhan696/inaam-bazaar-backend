@@ -15,8 +15,8 @@ class CreateOrderItemDto {
 }
 
 export class CreateOrderDto {
-  @ApiProperty()
-  customerId: number;
+  @ApiPropertyOptional({ description: 'Customer ID (temporarily optional for JazzCash integration testing)' })
+  customerId?: number;
 
   @ApiProperty({ type: [CreateOrderItemDto] })
   items: CreateOrderItemDto[];

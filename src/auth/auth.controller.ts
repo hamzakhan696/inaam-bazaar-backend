@@ -17,7 +17,21 @@ export class AuthController {
   @ApiOperation({ summary: 'Sign up a new user' })
   @ApiBody({ type: SignUpDto })
   async signUp(@Body() signUpDto: SignUpDto) {
-    return this.authService.signUp(signUpDto);
+    try {
+      const user = await this.authService.signUp(signUpDto);
+      // Auto-login: generate JWT token
+      const jwt = require('jsonwebtoken');
+      const secret = this.configService.get<string>('JWT_SECRET') || 'default_jwt_secret';
+      const token = jwt.sign({ id: user.id, email: user.email, contactNumber: user.contactNumber }, secret, { expiresIn: '7d' });
+      return { success: true, token, user };
+    } catch (error) {
+      // Duplicate email/phone error (TypeORM)
+      if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
+        return { success: false, message: 'Email or phone number already exists' };
+      }
+      // Validation or other errors
+      return { success: false, message: error.message || 'Signup failed' };
+    }
   }
 
   @Put('signup')

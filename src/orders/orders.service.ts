@@ -16,15 +16,17 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<any> {
+    // MOCK IMPLEMENTATION FOR JAZZCASH TESTING ONLY
+    // Commented out all DB/customer logic for now
     // Generate unique order number
-    const orderNumber = `#${Math.floor(100000 + Math.random() * 900000)}`;
-    const order = this.orderRepository.create({
-      ...createOrderDto,
-      orderNumber,
-      status: 'pending',
-      paymentStatus: 'unpaid',
-    });
-    order.items = createOrderDto.items.map(item => this.orderItemRepository.create(item));
+    const orderNumber = `${Math.floor(100000 + Math.random() * 900000)}`;
+    // const order = this.orderRepository.create({
+    //   ...createOrderDto,
+    //   orderNumber,
+    //   status: 'pending',
+    //   paymentStatus: 'unpaid',
+    // });
+    // order.items = createOrderDto.items.map(item => this.orderItemRepository.create(item));
 
     // Payment gateway integration logic
     switch (createOrderDto.paymentMethod) {
@@ -36,6 +38,7 @@ export class OrdersService {
         const returnUrl = 'http://192.168.18.198:3000/payment/callback';
         const amount = (createOrderDto.totalPayment * 100).toFixed(0); // Use totalPayment from DTO
         const txnRefNo = `T${Date.now()}`;
+        // Add all required fields for JazzCash sandbox
         const postData = {
           pp_Version: '1.1',
           pp_TxnType: 'MWALLET',
@@ -49,6 +52,15 @@ export class OrdersService {
           pp_BillReference: orderNumber,
           pp_Description: 'Order Payment',
           pp_ReturnURL: returnUrl,
+          // Required extra fields for sandbox
+          pp_MobileNumber: '03001234567', // dummy
+          pp_CNIC: '3520212345678', // dummy
+          pp_MerchantEmail: 'test@example.com', // dummy
+          ppmpf_1: 'custom1',
+          ppmpf_2: 'custom2',
+          ppmpf_3: 'custom3',
+          ppmpf_4: 'custom4',
+          ppmpf_5: 'custom5',
           pp_SecureHash: '', // To be filled after signature
         };
         // Generate signature
@@ -56,8 +68,8 @@ export class OrdersService {
         postData.pp_SecureHash = signature;
         // Construct payment URL (for redirect)
         const paymentUrl = this.constructJazzCashPaymentUrl(postData);
-        // Save order as pending
-        await this.orderRepository.save(order);
+        // MOCK: Do not save order to DB
+        // await this.orderRepository.save(order);
         // Return payment URL for frontend to redirect
         return { paymentUrl };
       }
@@ -71,11 +83,9 @@ export class OrdersService {
       default:
         throw new Error('Invalid payment method');
     }
-
-    // Order type logic (for future use, e.g., notifications, analytics)
-    // order.orderType will be 'product' or 'lottery'
-
-    return this.orderRepository.save(order);
+    // MOCK: Do not save order to DB
+    // return this.orderRepository.save(order);
+    return { message: 'Order created (mocked, no DB check)' };
   }
 
   // Helper to generate JazzCash signature

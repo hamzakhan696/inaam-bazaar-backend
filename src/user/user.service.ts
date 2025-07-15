@@ -13,6 +13,16 @@ export class UserService {
   ) {}
 
   async create(signUpDto: SignUpDto) {
+    // Check for existing user by email or contactNumber
+    const existing = await this.userRepo.findOne({
+      where: [
+        { email: signUpDto.email },
+        { contactNumber: signUpDto.contactNumber }
+      ]
+    });
+    if (existing) {
+      throw new Error('User with this email or contact number already exists');
+    }
     const user = this.userRepo.create(signUpDto);
     return this.userRepo.save(user);
   }

@@ -1,12 +1,15 @@
 import axios from 'axios';
 
 export async function sendWhatsAppSignupTemplate(to: string) {
+  // Use HTTPS URL for WhatsApp button, with phone as query param
+  const signupUrl = `https://universal-link-plum.vercel.app/signup?phone=${to}`;
+  console.log('Signup URL:', signupUrl); // Debug log
   const data = {
     messaging_product: 'whatsapp',
     to,
     type: 'template',
     template: {
-      name: 'signup_link',
+      name: 'signup_win', // updated template name
       language: { code: 'en_US' },
       components: [
         {
@@ -14,12 +17,13 @@ export async function sendWhatsAppSignupTemplate(to: string) {
           sub_type: 'url',
           index: '0',
           parameters: [
-            { type: 'text', text: 'winbazar://dashboard' }
+            { type: 'text', text: signupUrl } // send HTTPS link with number
           ]
         }
       ]
     }
   };
+  console.log('WhatsApp API Payload:', JSON.stringify(data, null, 2)); // Debug log
   try {
     await axios.post(
       'https://graph.facebook.com/v19.0/684177008114996/messages',
@@ -34,7 +38,7 @@ export async function sendWhatsAppSignupTemplate(to: string) {
   } catch (error) {
     console.error('Failed to send WhatsApp signup template', error?.response?.data || error.message);
     // Fallback to simple text message
-    await sendSimpleTextMessage(to, `Click below to complete sign-up 👇 winbazar://dashboard`);
+    await sendSimpleTextMessage(to, `Click below to complete sign-up 👇 ${signupUrl}`);
   }
 }
 
