@@ -19,4 +19,13 @@ export class Lottery {
 
   @Column()
   quantity: number;
+
+  @Column({ type: 'float', nullable: false })
+  price: number;
+
+  @Column('simple-array', { nullable: true })
+  images: string[];
+
+  @Column({ type: 'enum', enum: ['active', 'inactive'], default: 'active' })
+  status: 'active' | 'inactive';
 }

@@ -11,7 +11,7 @@ export class User {
   @Column()
   lastName: string;
 
-  @Column({ type: 'enum', enum: ['male', 'female'] })
+  @Column({ type: 'enum', enum: ['male', 'female'], nullable: true })
   gender: 'male' | 'female';
 
   @Column({ unique: true })
@@ -20,10 +20,10 @@ export class User {
   @Column('bigint')
   contactNumber: number;
 
-  @Column()
+  @Column({ nullable: true })
   nationality: string;
 
-  @Column('bigint')
+  @Column('bigint', { nullable: true })
   dateOfBirth: number;
 
   @Column({ nullable: true })

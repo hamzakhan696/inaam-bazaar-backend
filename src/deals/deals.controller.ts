@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Param, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiConsumes, ApiOperation } from '@nestjs/swagger';
 import { DealsService } from './deals.service';
 import { CreateDealDto } from './dto/create-deal.dto';
@@ -26,5 +26,21 @@ export class DealsController {
   @ApiOperation({ summary: 'Get all deals' })
   findAll() {
     return this.dealsService.findAll();
+  }
+
+  @Patch(':id')
+  @UseInterceptors(FilesInterceptor('images'))
+  update(
+    @Param('id') id: number,
+    @Body() dto: any,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    dto.images = files;
+    return this.dealsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: number) {
+    return this.dealsService.remove(id);
   }
 } 

@@ -15,9 +15,6 @@ export class Deal {
   images: string[];
 
   @Column({ nullable: true })
-  categoryId?: number;
-
-  @Column({ nullable: true })
   productId?: number;
 
   @Column({ nullable: true })

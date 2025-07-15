@@ -12,10 +12,12 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { InventoryModule } from './inventory/inventory.module';
-import { WebhookModule } from './webhook/webhook.module';
 import { DiscountsModule } from './discounts/discounts.module';
 import { DealsModule } from './deals/deals.module';
 import { CustomersModule } from './customers/customers.module';
+import { WebhookModule } from './webhook/webhook.module';
+import { OrdersModule } from './orders/orders.module';
+import { AdminAuthModule } from './admin-auth/admin-auth.module';
 
 @Module({
   imports: [
@@ -34,7 +36,7 @@ import { CustomersModule } from './customers/customers.module';
         database: config.get<string>('DB_DATABASE'),
         synchronize: true,
         logging: true,
-        entities,
+        entities
       }),
     }),
     ProductsModule,
@@ -44,10 +46,12 @@ import { CustomersModule } from './customers/customers.module';
     AuthModule,
     UserModule,
     InventoryModule,
-    WebhookModule,
     DiscountsModule,
     DealsModule,
     CustomersModule,
+    WebhookModule,
+    OrdersModule,
+    AdminAuthModule
   ],
 })
 export class AppModule {}

@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Body, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import { Controller, Post, Get, Patch, Delete, Body, UploadedFiles, UseInterceptors, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { LotteryService } from './lotteries.service';
 import { CreateLotteryDto } from './dto/create-lottery.dto';
@@ -24,5 +24,37 @@ export class LotteryController {
   @Get()
   findAll() {
     return this.service.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.service.findOne(id);
+  }
+
+  @Patch(':id')
+  update(@Param('id') id: number, @Body() dto: any) {
+    return this.service.update(id, dto);
+  }
+
+  @Patch(':id/status')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        status: { type: 'string', enum: ['active', 'inactive'], example: 'active' }
+      },
+      required: ['status']
+    }
+  })
+  updateStatus(
+    @Param('id') id: number,
+    @Body() body: { status: 'active' | 'inactive' }
+  ) {
+    return this.service.updateStatus(id, body.status);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: number) {
+    return this.service.remove(id);
   }
 }

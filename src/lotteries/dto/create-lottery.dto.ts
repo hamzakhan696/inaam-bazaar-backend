@@ -16,6 +16,9 @@ export class CreateLotteryDto {
   @ApiProperty()
   quantity: number;
 
+  @ApiProperty()
+  price: number;
+
   @ApiProperty({
     type: 'array',
     items: { type: 'string', format: 'binary' },
@@ -23,4 +26,7 @@ export class CreateLotteryDto {
     description: 'Lottery images (upload files)'
   })
   images?: any;
+
+  @ApiProperty({ enum: ['active', 'inactive'], default: 'active', required: false })
+  status?: 'active' | 'inactive';
 } 

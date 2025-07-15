@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany } from 'typeorm';
 import { Category } from '../categories/categories.entity';
+import { ProductInventory } from './product-inventory.entity';
 
 @Entity()
 export class Product {
@@ -12,11 +13,8 @@ export class Product {
   @Column({ nullable: true })
   description: string;
 
-  @Column('simple-array', { nullable: true })
-  images: string[];
-
-  @Column({ nullable: true })
-  color: string;
+  @Column('json', { nullable: true })
+  images: { url: string, color: string }[];
 
   @Column('simple-array', { nullable: true })
   sizes: string[];
@@ -30,12 +28,21 @@ export class Product {
   @Column({ nullable: true })
   discount: number;
 
-  @Column()
-  inventory: number;
+  @Column({ nullable: true, default: 0 })
+  totalQuantity: number;
 
   @Column()
   categoryId: number;
 
-  @ManyToOne(() => Category)
+  @ManyToOne(() => Category, category => category.products)
   category: Category;
+
+  @Column({ default: 1 })
+  status: number;
+
+  @OneToMany(() => ProductInventory, inv => inv.product, { cascade: true })
+  inventory: ProductInventory[];
+
+  @Column({ default: false })
+  isArrival: boolean;
 }

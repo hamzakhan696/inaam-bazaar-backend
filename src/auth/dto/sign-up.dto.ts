@@ -7,20 +7,20 @@ export class SignUpDto {
   @ApiProperty()
   lastName: string;
 
-  @ApiProperty({ enum: ['male', 'female'] })
-  gender: 'male' | 'female';
-
   @ApiProperty()
   email: string;
 
   @ApiProperty({ type: Number })
   contactNumber: number;
 
-  @ApiProperty()
-  nationality: string;
+  @ApiPropertyOptional({ enum: ['male', 'female'] })
+  gender?: 'male' | 'female';
 
-  @ApiProperty({ type: Number })
-  dateOfBirth: number;
+  @ApiPropertyOptional()
+  nationality?: string;
+
+  @ApiPropertyOptional({ type: Number })
+  dateOfBirth?: number;
 
   @ApiPropertyOptional()
   profilePicture?: string;

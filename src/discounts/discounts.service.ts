@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Discount } from './discount.entity';
@@ -17,5 +17,19 @@ export class DiscountsService {
 
   findAll() {
     return this.discountRepository.find();
+  }
+
+  async update(id: number, dto: any) {
+    const discount = await this.discountRepository.findOne({ where: { id } });
+    if (!discount) throw new NotFoundException('Discount not found');
+    Object.assign(discount, dto);
+    return this.discountRepository.save(discount);
+  }
+
+  async remove(id: number) {
+    const discount = await this.discountRepository.findOne({ where: { id } });
+    if (!discount) throw new NotFoundException('Discount not found');
+    await this.discountRepository.remove(discount);
+    return { message: 'Discount deleted successfully' };
   }
 } 

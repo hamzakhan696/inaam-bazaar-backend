@@ -45,4 +45,9 @@ export class StorageService {
   async getFileUrl(filePath: string): Promise<string> {
     return this.minioClient.presignedGetObject(this.bucketName, filePath);
   }
+
+  // Get permanent public URL for images (doesn't expire)
+  async getPublicUrl(filePath: string): Promise<string> {
+    return `https://storage-api.creativecodetech.com/${this.bucketName}/${filePath}`;
+  }
 }

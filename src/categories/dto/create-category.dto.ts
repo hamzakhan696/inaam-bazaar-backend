@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Column } from 'typeorm';
 
 export class CreateCategoryDto {
   @ApiProperty()
@@ -15,10 +16,6 @@ export class CreateCategoryDto {
   @ApiProperty()
   description: string;
 
-  @ApiProperty({
-    type: 'array',
-    items: { type: 'number' },
-    description: 'Array of product IDs',
-  })
-  productIds: number[];
+  @ApiProperty({ type: [Number], required: false })
+  productIds?: number[];
 } 
