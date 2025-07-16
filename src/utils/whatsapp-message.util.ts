@@ -43,20 +43,31 @@ export async function sendWhatsAppSignupTemplate(to: string) {
 }
 
 export async function sendWhatsAppLoginTemplate(to: string, token: string) {
+  // Prevent double URL: extract JWT if a full URL is passed
+  let jwtToken = token;
+  if (typeof token === 'string' && token.startsWith('http')) {
+    try {
+      const url = new URL(token);
+      jwtToken = url.searchParams.get('token') || token;
+    } catch {
+      // fallback: use as is
+    }
+  }
+  // Send only the JWT token as the parameter for the WhatsApp template
   const data = {
     messaging_product: 'whatsapp',
     to,
     type: 'template',
     template: {
-      name: 'login_link',
-      language: { code: 'en' },
+      name: 'login_app', // must match the template name in WhatsApp Manager
+      language: { code: 'en_US' },
       components: [
         {
           type: 'button',
           sub_type: 'url',
           index: '0',
           parameters: [
-            { type: 'text', text: `winbazar://dashboard?token=${token}` }
+            { type: 'text', text: jwtToken } // Only JWT token, not full URL
           ]
         }
       ]
@@ -76,7 +87,8 @@ export async function sendWhatsAppLoginTemplate(to: string, token: string) {
   } catch (error) {
     console.error('Failed to send WhatsApp login template', error?.response?.data || error.message);
     // Fallback to simple text message
-    await sendSimpleTextMessage(to, `Welcome back! Tap to login: winbazar://dashboard?token=${token}`);
+    const loginUrl = `https://universal-link-plum.vercel.app/dashboard?token=${jwtToken}`;
+    await sendSimpleTextMessage(to, `Welcome back! Tap to login: ${loginUrl}`);
   }
 }
 
