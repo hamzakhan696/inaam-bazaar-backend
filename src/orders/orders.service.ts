@@ -32,10 +32,10 @@ export class OrdersService {
     switch (createOrderDto.paymentMethod) {
       case 'jazzcash': {
         // JazzCash payment initiation logic
-        const merchantId = 'MC187142';
-        const password = 'z00h3uzyew';
-        const integritySalt = '73vueg23ct';
-        const returnUrl = 'http://192.168.18.198:3000/payment/callback';
+        const merchantId = 'MC191942';
+        const password = '1zy8gvh2f0';
+        const integritySalt = '92y5vx3tyt';
+        const returnUrl = 'https://universal-link-plum.vercel.app/dashboard';
         const amount = (createOrderDto.totalPayment * 100).toFixed(0); // Use totalPayment from DTO
         const txnRefNo = `T${Date.now()}`;
         // Add all required fields for JazzCash sandbox
@@ -63,15 +63,16 @@ export class OrdersService {
           ppmpf_5: 'custom5',
           pp_SecureHash: '', // To be filled after signature
         };
+        console.log('JazzCash postData before signature:', postData);
         // Generate signature
         const signature = this.generateJazzCashSignature(postData, integritySalt);
+        console.log('JazzCash signature string:', signature);
         postData.pp_SecureHash = signature;
-        // Construct payment URL (for redirect)
-        const paymentUrl = this.constructJazzCashPaymentUrl(postData);
-        // MOCK: Do not save order to DB
-        // await this.orderRepository.save(order);
-        // Return payment URL for frontend to redirect
-        return { paymentUrl };
+        console.log('JazzCash postData after signature:', postData);
+        // Return form fields for frontend to POST
+        const result = { formFields: postData };
+        console.log('JazzCash response to frontend:', result);
+        return result;
       }
       case 'easypaisa':
         // TODO: Integrate EasyPaisa payment gateway here
@@ -102,15 +103,6 @@ export class OrdersService {
     const hmac = crypto.createHmac('sha256', integritySalt);
     hmac.update(stringToHash, 'utf8');
     return hmac.digest('hex');
-  }
-
-  // Helper to construct JazzCash payment URL
-  private constructJazzCashPaymentUrl(data: any): string {
-    const baseUrl = 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
-    const params = Object.entries(data)
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-      .join('&');
-    return `${baseUrl}?${params}`;
   }
 
   // Helper to get JazzCash date time format
