@@ -14,9 +14,24 @@ export class OrdersController {
   }
 
   @Post('jazzcash')
-  async createJazzCashOrder(@Body() createOrderDto: CreateOrderDto) {
+  async createJazzCashOrder(@Body() createOrderDto: CreateOrderDto, @Res() res: Response) {
     createOrderDto.paymentMethod = 'jazzcash';
-    return this.ordersService.create(createOrderDto);
+    const { postData } = await this.ordersService.create(createOrderDto);
+
+    // Generate auto-submitting HTML form for JazzCash
+    const formHtml = `
+      <form id="jazzcashForm" method="POST" action="https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/">
+        ${Object.entries(postData).map(([k, v]) => `<input type="hidden" name="${k}" value="${v}" />`).join('')}
+      </form>
+      <script>document.getElementById('jazzcashForm').submit();</script>
+    `;
+    res.set('Content-Type', 'text/html');
+    return res.send(formHtml);
+  }
+
+  @Post('jazzcash/initiate')
+  async initiateJazzCash(@Body() createOrderDto: CreateOrderDto) {
+    return this.ordersService.initiateJazzCashPayment(createOrderDto);
   }
 
   @Post('/payment/callback')

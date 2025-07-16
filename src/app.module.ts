@@ -18,6 +18,7 @@ import { CustomersModule } from './customers/customers.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { OrdersModule } from './orders/orders.module';
 import { AdminAuthModule } from './admin-auth/admin-auth.module';
+import { JazzCashController } from './orders/jazzcash.controller';
 
 @Module({
   imports: [
