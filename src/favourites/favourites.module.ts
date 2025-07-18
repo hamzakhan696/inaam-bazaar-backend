@@ -15,5 +15,6 @@ import { User } from '../user/user.entity';
   ],
   providers: [FavouritesService],
   controllers: [FavouritesController],
+  exports: [FavouritesService],
 })
 export class FavouritesModule {} 
