@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Lottery } from './lotteries.entity';
 import { CreateLotteryDto } from './dto/create-lottery.dto';
 import { StorageService } from '../storage/storage.service';
+import { Winner } from './lotteries.entity';
 
 @Injectable()
 export class LotteryService {
@@ -11,6 +12,8 @@ export class LotteryService {
     @InjectRepository(Lottery)
     private lotteryRepo: Repository<Lottery>,
     private readonly storageService: StorageService,
+    @InjectRepository(Winner)
+    private winnerRepo: Repository<Winner>,
   ) {}
 
   async create(dto: CreateLotteryDto) {
@@ -22,13 +25,16 @@ export class LotteryService {
       }
     }
     const lotteryData = {
-      ...dto,
+      ...dto, // includes category
       images: imagePaths,
     };
     return this.lotteryRepo.save(lotteryData);
   }
 
-  findAll() {
+  findAll(category?: 'active' | 'lucky-dip' | 'treasure') {
+    if (category) {
+      return this.lotteryRepo.find({ where: { category } });
+    }
     return this.lotteryRepo.find();
   }
 
@@ -55,5 +61,18 @@ export class LotteryService {
     if (!lottery) throw new NotFoundException('Lottery not found');
     lottery.status = status;
     return this.lotteryRepo.save(lottery);
+  }
+
+  async findSoldOut() {
+    return this.lotteryRepo.find({ where: { quantity: 0 } });
+  }
+
+  async createWinner(data: { lotteryId: number; winnerName: string; prize: string; drawDate: Date }) {
+    const winner = this.winnerRepo.create(data);
+    return this.winnerRepo.save(winner);
+  }
+
+  async getWinners() {
+    return this.winnerRepo.find({ order: { drawDate: 'DESC' }, relations: ['lottery'] });
   }
 }

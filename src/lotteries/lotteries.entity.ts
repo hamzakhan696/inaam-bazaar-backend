@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
 @Entity()
 export class Lottery {
@@ -26,6 +26,33 @@ export class Lottery {
   @Column('simple-array', { nullable: true })
   images: string[];
 
+  @Column({ type: 'enum', enum: ['active', 'lucky-dip', 'treasure'], default: 'active' })
+  category: 'active' | 'lucky-dip' | 'treasure';
+
   @Column({ type: 'enum', enum: ['active', 'inactive'], default: 'active' })
   status: 'active' | 'inactive';
+}
+
+@Entity()
+export class Winner {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  lotteryId: number;
+
+  @ManyToOne(() => Lottery)
+  @JoinColumn({ name: 'lotteryId' })
+  lottery: Lottery;
+
+  @Column()
+  winnerName: string;
+
+  @Column()
+  prize: string;
+
+  @Column('datetime')
+  drawDate: Date;
+
+  // Optional: image, city, etc.
 }

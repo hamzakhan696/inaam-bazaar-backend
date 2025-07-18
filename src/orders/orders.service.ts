@@ -44,6 +44,7 @@ export class OrdersService {
           pp_TxnType: 'MWALLET',
           pp_Language: 'EN',
           pp_MerchantID: merchantId,
+          pp_Password: password,
           pp_TxnRefNo: txnRefNo,
           pp_Amount: amount,
           pp_TxnCurrency: 'PKR',
@@ -103,51 +104,9 @@ export class OrdersService {
     return { message: 'Order created (mocked, no DB check)' };
   }
 
-  async initiateJazzCashPayment(createOrderDto: CreateOrderDto): Promise<{ paymentUrl: string }> {
-    // JazzCash payment initiation logic
-    const merchantId = 'MC191942';
-    const password = '1zy8gvh2f0';
-    const integritySalt = '92y5xv3tyt';
-    // IMPORTANT: Set returnUrl to your frontend success page for best UX
-    const returnUrl = 'http://localhost:3000/payment-success';
-    const amount = (createOrderDto.totalPayment * 100).toFixed(0); // Use totalPayment from DTO
-    const orderNumber = `${Math.floor(100000 + Math.random() * 900000)}`;
-    const txnRefNo = `T${Date.now()}`;
-    const postData = {
-      pp_Version: '2.0',
-      pp_TxnType: 'MWALLET',
-      pp_Language: 'EN',
-      pp_MerchantID: merchantId,
-      // pp_Password: password, // Removed as per troubleshooting
-      pp_TxnRefNo: txnRefNo,
-      pp_Amount: amount,
-      pp_TxnCurrency: 'PKR',
-      pp_TxnDateTime: this.getJazzCashDateTime(),
-      pp_BillReference: orderNumber,
-      pp_Description: 'Order Payment',
-      pp_ReturnURL: returnUrl,
-      pp_MobileNumber: '03123456789',
-      pp_CNIC: '3520212345678',
-      pp_MerchantEmail: 'test@example.com',
-      ppmpf_1: 'custom1',
-      ppmpf_2: 'custom2',
-      ppmpf_3: 'custom3',
-      ppmpf_4: 'custom4',
-      ppmpf_5: 'custom5',
-      pp_SecureHash: '',
-    };
-    // Generate signature
-    const signature = this.generateJazzCashSignature(postData, integritySalt);
-    postData.pp_SecureHash = signature;
-    // Construct payment URL
-    const baseUrl = 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
-    const params = Object.entries(postData)
-      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
-      .join('&');
-    const paymentUrl = `${baseUrl}?${params}`;
-    console.log('JazzCash paymentUrl:', paymentUrl);
-    console.log('JazzCash postData:', postData);
-    return { paymentUrl };
+  async initiateJazzCashPayment(createOrderDto: CreateOrderDto): Promise<{ postData: any }> {
+    createOrderDto.paymentMethod = 'jazzcash';
+    return this.create(createOrderDto);
   }
 
   // Helper to generate JazzCash signature
