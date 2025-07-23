@@ -18,6 +18,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ApiBody } from '@nestjs/swagger';
 import { NotFoundException } from '@nestjs/common';
+import { Winner } from "./lotteries/lotteries.entity";
 
 @Entity()
 export class Favourite {
@@ -154,4 +155,4 @@ export class FavouritesController {
   }
 }
 
-export const entities = [Category, Lottery, Product, CustomColor, User, Inventory, Discount, Deal, Customer, Order, OrderItem, ProductInventory, Favourite];
+export const entities = [Category, Lottery, Product, CustomColor, User, Inventory, Discount, Deal, Customer, Order, OrderItem, ProductInventory, Favourite, Winner];

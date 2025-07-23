@@ -38,21 +38,26 @@ export class LotteryController {
   }
 
   // Manual winner entry by admin (for now). In future, automate this process.
-  @Post('winners')
+  @Post('winners/:lotteryId')
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        lotteryId: { type: 'number', example: 1 },
         winnerName: { type: 'string', example: 'Ali Khan' },
         prize: { type: 'string', example: 'PKR 500,000 Cash' },
         drawDate: { type: 'string', format: 'date-time', example: '2025-07-17T12:00:00Z' }
       },
-      required: ['lotteryId', 'winnerName', 'prize', 'drawDate']
+      required: ['winnerName', 'prize', 'drawDate']
     }
   })
-  createWinner(@Body() body: { lotteryId: number; winnerName: string; prize: string; drawDate: Date }) {
-    return this.service.createWinner(body);
+  createWinner(
+    @Param('lotteryId') lotteryId: number,
+    @Body() body: { winnerName: string; prize: string; drawDate: Date }
+  ) {
+    return this.service.createWinner({
+      lotteryId: Number(lotteryId),
+      ...body
+    });
   }
 
   @Get(':id')
