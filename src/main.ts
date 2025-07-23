@@ -27,7 +27,7 @@ async function bootstrap() {
   app.useStaticAssets(staticFilesPath);
 
   const frontendUrl = configService.get<string>('FRONTEND_URL');
-  const origins = [frontendUrl].filter((url): url is string => !!url); // Type guard
+  const origins = [frontendUrl, 'http://localhost:3002'].filter((url): url is string => !!url); // Add localhost:3002 for dev
   console.log('origin :', origins);
   app.enableCors({
     origin: origins,
@@ -44,6 +44,6 @@ async function bootstrap() {
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
-  await app.listen(3000);
+  await app.listen(3001);
 }
 bootstrap();

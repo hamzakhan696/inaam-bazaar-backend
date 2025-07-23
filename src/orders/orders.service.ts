@@ -34,13 +34,13 @@ export class OrdersService {
         // JazzCash payment initiation logic
         const merchantId = 'MC191942';
         const password = '1zy8gvh2f0';
-        const integritySalt = '92y5vx3tyt';
-        const returnUrl = 'https://universal-link-plum.vercel.app/dashboard';
+        const integritySalt = '92y5xv3tyt';
+        const returnUrl = 'http://192.168.18.198:3001/jazzcash';
         const amount = (createOrderDto.totalPayment * 100).toFixed(0); // Use totalPayment from DTO
         const txnRefNo = `T${Date.now()}`;
         // Add all required fields for JazzCash sandbox
         const postData = {
-          pp_Version: '1.1',
+          pp_Version: '2.0',
           pp_TxnType: 'MWALLET',
           pp_Language: 'EN',
           pp_MerchantID: merchantId,
@@ -52,8 +52,7 @@ export class OrdersService {
           pp_BillReference: orderNumber,
           pp_Description: 'Order Payment',
           pp_ReturnURL: returnUrl,
-          // Required extra fields for sandbox
-          pp_MobileNumber: '03001234567', // dummy
+          pp_MobileNumber: '03123456789', // dummy
           pp_CNIC: '3520212345678', // dummy
           pp_MerchantEmail: 'test@example.com', // dummy
           ppmpf_1: 'custom1',
@@ -63,16 +62,33 @@ export class OrdersService {
           ppmpf_5: 'custom5',
           pp_SecureHash: '', // To be filled after signature
         };
-        console.log('JazzCash postData before signature:', postData);
+        console.log('JazzCash postData:', postData); // Debug log
         // Generate signature
         const signature = this.generateJazzCashSignature(postData, integritySalt);
         console.log('JazzCash signature string:', signature);
         postData.pp_SecureHash = signature;
-        console.log('JazzCash postData after signature:', postData);
-        // Return form fields for frontend to POST
-        const result = { formFields: postData };
-        console.log('JazzCash response to frontend:', result);
-        return result;
+        console.log('JazzCash postData with signature:', postData); // Debug log
+        // Ensure customer exists before saving order
+        let customerId = createOrderDto.customerId;
+        if (customerId) {
+          const customerRepo = this.orderRepository.manager.getRepository('Customer');
+          const existingCustomer = await customerRepo.findOne({ where: { id: customerId } });
+          if (!existingCustomer) {
+            // Create a test customer if not exists
+            await customerRepo.save({ id: customerId, name: 'Test Customer', contactNumber: '03123456789' });
+          }
+        }
+        // Save order to DB
+        const order = this.orderRepository.create({
+          ...createOrderDto,
+          orderNumber,
+          status: 'pending',
+          paymentStatus: 'unpaid',
+        });
+        order.items = createOrderDto.items.map(item => this.orderItemRepository.create(item));
+        await this.orderRepository.save(order);
+        // Return postData (with signature) to frontend
+        return { postData };
       }
       case 'easypaisa':
         // TODO: Integrate EasyPaisa payment gateway here
@@ -89,20 +105,53 @@ export class OrdersService {
     return { message: 'Order created (mocked, no DB check)' };
   }
 
+  async initiateJazzCashPayment(createOrderDto: CreateOrderDto): Promise<{ postData: any }> {
+    createOrderDto.paymentMethod = 'jazzcash';
+    return this.create(createOrderDto);
+  }
+
   // Helper to generate JazzCash signature
   private generateJazzCashSignature(data: any, integritySalt: string): string {
-    // 1. Filter all keys starting with 'pp_' except 'pp_SecureHash'
-    const keys = Object.keys(data)
-      .filter(k => k.startsWith('pp_') && k !== 'pp_SecureHash')
-      .sort(); // Alphabetical order
-    // 2. Join values with '&'
-    const joinedValues = keys.map(k => data[k]).join('&');
-    // 3. Prepend integritySalt
+    // JazzCash recommended field order
+    const fieldOrder = [
+      'pp_Amount',
+      'pp_BillReference',
+      'pp_CNIC',
+      'pp_Description',
+      'pp_Language',
+      'pp_MerchantID',
+      'pp_MerchantEmail',
+      'pp_MobileNumber',
+      'pp_ReturnURL',
+      'pp_TxnCurrency',
+      'pp_TxnDateTime',
+      'pp_TxnRefNo',
+      'pp_TxnType',
+      'pp_Version',
+      'ppmpf_1',
+      'ppmpf_2',
+      'ppmpf_3',
+      'ppmpf_4',
+      'ppmpf_5'
+    ];
+    // Only include fields present in data
+    const joinedValues = fieldOrder.map(k => data[k] || '').join('&');
     const stringToHash = `${integritySalt}&${joinedValues}`;
-    // 4. HMAC-SHA256 with integritySalt as key
+    console.log('JazzCash stringToHash:', stringToHash); // Debug log
     const hmac = crypto.createHmac('sha256', integritySalt);
     hmac.update(stringToHash, 'utf8');
-    return hmac.digest('hex');
+    const signature = hmac.digest('hex');
+    console.log('JazzCash signature:', signature); // Debug log
+    return signature;
+  }
+
+  // Helper to construct JazzCash payment URL
+  private constructJazzCashPaymentUrl(data: any): string {
+    const baseUrl = 'https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/';
+    const params = Object.entries(data)
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .join('&');
+    return `${baseUrl}?${params}`;
   }
 
   // Helper to get JazzCash date time format
@@ -122,7 +171,7 @@ export class OrdersService {
   }
 
   async handleJazzCashCallback(body: any): Promise<{ success: boolean; orderId?: number }> {
-    const integritySalt = '73vueg23ct';
+    const integritySalt = '92y5xv3tyt'; // Updated to match sandbox credentials
     const receivedSignature = body.pp_SecureHash;
     // Remove signature from body for verification
     const dataForSign = { ...body };

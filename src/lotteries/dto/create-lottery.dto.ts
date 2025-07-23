@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { PartialType } from '@nestjs/swagger';
 
 export class CreateLotteryDto {
   @ApiProperty()
@@ -27,6 +28,11 @@ export class CreateLotteryDto {
   })
   images?: any;
 
+  @ApiProperty({ enum: ['active', 'lucky-dip', 'treasure'], required: true })
+  category: 'active' | 'lucky-dip' | 'treasure';
+
   @ApiProperty({ enum: ['active', 'inactive'], default: 'active', required: false })
   status?: 'active' | 'inactive';
-} 
+}
+
+export class UpdateLotteryDto extends PartialType(CreateLotteryDto) {} 

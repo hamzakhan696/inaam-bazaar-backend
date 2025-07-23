@@ -37,4 +37,8 @@ export class UserService {
   async findByPhone(phone: string) {
     return this.userRepo.findOne({ where: { contactNumber: Number(phone) } });
   }
+
+  async findAll() {
+    return this.userRepo.find();
+  }
 } 

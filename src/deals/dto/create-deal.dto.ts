@@ -15,9 +15,6 @@ export class CreateDealDto {
   })
   images?: any;
 
-  @ApiPropertyOptional({ description: 'Category ID' })
-  categoryId?: number;
-
   @ApiPropertyOptional({ description: 'Product ID' })
   productId?: number;
 

@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { UpdateSignUpDto } from './dto/update-sign-up.dto';
 import { ConfigService } from '@nestjs/config';
+import { FavouritesService } from '../global-entities';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -11,6 +12,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly favouritesService: FavouritesService,
   ) {}
 
   @Post('signup')
@@ -23,7 +25,11 @@ export class AuthController {
       const jwt = require('jsonwebtoken');
       const secret = this.configService.get<string>('JWT_SECRET') || 'default_jwt_secret';
       const token = jwt.sign({ id: user.id, email: user.email, contactNumber: user.contactNumber }, secret, { expiresIn: '7d' });
-      return { success: true, token, user };
+      // Get user's favourites (should be empty on signup, but for consistency)
+      const favourites = await this.favouritesService.getFavourites(user.id);
+      // Only return itemId and itemType
+      const favList = favourites.map(fav => ({ itemId: fav.itemId, itemType: fav.itemType }));
+      return { success: true, token, user, favourites: favList };
     } catch (error) {
       // Duplicate email/phone error (TypeORM)
       if (error.code === 'ER_DUP_ENTRY' || error.code === '23505') {
@@ -64,6 +70,9 @@ export class AuthController {
     }
     // Generate app JWT for user
     const appToken = jwt.sign({ id: user.id, email: user.email, contactNumber: user.contactNumber }, secret, { expiresIn: '7d' });
-    return { success: true, token: appToken, user };
+    // Get user's favourites (itemId and itemType)
+    const favourites = await this.favouritesService.getFavourites(user.id);
+    const favList = favourites.map(fav => ({ itemId: fav.itemId, itemType: fav.itemType }));
+    return { success: true, token: appToken, user, favourites: favList };
   }
 } 
