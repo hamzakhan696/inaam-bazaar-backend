@@ -68,6 +68,11 @@ export class LotteryService {
   }
 
   async createWinner(data: { lotteryId: number; winnerName: string; prize: string; drawDate: Date }) {
+    // Validate that the lottery exists
+    const lottery = await this.lotteryRepo.findOne({ where: { id: data.lotteryId } });
+    if (!lottery) {
+      throw new NotFoundException('Lottery not found');
+    }
     const winner = this.winnerRepo.create(data);
     return this.winnerRepo.save(winner);
   }

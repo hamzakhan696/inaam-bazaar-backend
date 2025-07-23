@@ -20,6 +20,7 @@ import { OrdersModule } from './orders/orders.module';
 import { AdminAuthModule } from './admin-auth/admin-auth.module';
 import { JazzCashController } from './orders/jazzcash.controller';
 import { FavouritesModule } from './favourites/favourites.module';
+import { PayfastModule } from './payfast/payfast.module';
 
 @Module({
   imports: [
@@ -54,7 +55,8 @@ import { FavouritesModule } from './favourites/favourites.module';
     WebhookModule,
     OrdersModule,
     AdminAuthModule,
-    FavouritesModule
+    FavouritesModule,
+    PayfastModule
   ],
 })
 export class AppModule {}
