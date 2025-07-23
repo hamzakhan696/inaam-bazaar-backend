@@ -18,9 +18,8 @@ import { CustomersModule } from './customers/customers.module';
 import { WebhookModule } from './webhook/webhook.module';
 import { OrdersModule } from './orders/orders.module';
 import { AdminAuthModule } from './admin-auth/admin-auth.module';
-import { JazzCashController } from './orders/jazzcash.controller';
 import { FavouritesModule } from './favourites/favourites.module';
-import { PayfastModule } from './payfast/payfast.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -56,7 +55,7 @@ import { PayfastModule } from './payfast/payfast.module';
     OrdersModule,
     AdminAuthModule,
     FavouritesModule,
-    PayfastModule
+    StripeModule
   ],
 })
 export class AppModule {}
