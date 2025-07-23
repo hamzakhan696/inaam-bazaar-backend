@@ -24,66 +24,82 @@ export class OrdersService {
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
-    // Generate unique order number
-    const orderNumber = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
+    try {
+      console.log('Creating order with DTO:', createOrderDto);
+      
+      // Generate unique order number
+      const orderNumber = `ORD-${Date.now()}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-    // Validate order type and items
-    if (createOrderDto.orderType === 'product') {
-      if (!createOrderDto.productItems || createOrderDto.productItems.length === 0) {
-        throw new BadRequestException('Product items are required for product orders');
-      }
-    } else if (createOrderDto.orderType === 'lottery') {
-      if (!createOrderDto.lotteryItems || createOrderDto.lotteryItems.length === 0) {
-        throw new BadRequestException('Lottery items are required for lottery orders');
-      }
-    }
-
-    // Create order
-    const order = this.orderRepository.create({
-      orderNumber,
-      customerId: createOrderDto.userId, // Using userId as customerId for now
-      status: 'pending',
-      orderType: createOrderDto.orderType,
-      paymentMethod: createOrderDto.paymentMethod,
-      paymentStatus: createOrderDto.paymentStatus,
-      totalPayment: createOrderDto.totalPayment,
-    });
-
-    const savedOrder = await this.orderRepository.save(order);
-
-    // Create order items based on order type
-    if (createOrderDto.orderType === 'product') {
-      await this.createProductOrderItems(savedOrder.id, createOrderDto.productItems!);
-    } else if (createOrderDto.orderType === 'lottery') {
-      await this.createLotteryOrderItems(savedOrder.id, createOrderDto.lotteryItems!);
-    }
-
-    // Update inventory if payment is successful
-    if (createOrderDto.paymentStatus === 'paid') {
+      // Validate order type and items
       if (createOrderDto.orderType === 'product') {
-        await this.updateProductInventory(createOrderDto.productItems!);
+        if (!createOrderDto.productItems || createOrderDto.productItems.length === 0) {
+          throw new BadRequestException('Product items are required for product orders');
+        }
       } else if (createOrderDto.orderType === 'lottery') {
-        await this.updateLotteryInventory(createOrderDto.lotteryItems!);
+        if (!createOrderDto.lotteryItems || createOrderDto.lotteryItems.length === 0) {
+          throw new BadRequestException('Lottery items are required for lottery orders');
+        }
       }
+
+      console.log('Creating order with number:', orderNumber);
+
+      // Create order
+      const order = this.orderRepository.create({
+        orderNumber,
+        customerId: createOrderDto.userId, // Using userId as customerId for now
+        status: 'pending',
+        orderType: createOrderDto.orderType,
+        paymentMethod: createOrderDto.paymentMethod,
+        paymentStatus: createOrderDto.paymentStatus,
+        totalPayment: createOrderDto.totalPayment,
+      });
+
+      console.log('Saving order to database...');
+      const savedOrder = await this.orderRepository.save(order);
+      console.log('Order saved with ID:', savedOrder.id);
+
+      // Create order items based on order type
+      if (createOrderDto.orderType === 'product') {
+        console.log('Creating product order items...');
+        await this.createProductOrderItems(savedOrder.id, createOrderDto.productItems!);
+      } else if (createOrderDto.orderType === 'lottery') {
+        console.log('Creating lottery order items...');
+        await this.createLotteryOrderItems(savedOrder.id, createOrderDto.lotteryItems!);
+      }
+
+      // Update inventory if payment is successful
+      if (createOrderDto.paymentStatus === 'paid') {
+        console.log('Updating inventory...');
+        if (createOrderDto.orderType === 'product') {
+          await this.updateProductInventory(createOrderDto.productItems!);
+        } else if (createOrderDto.orderType === 'lottery') {
+          await this.updateLotteryInventory(createOrderDto.lotteryItems!);
+        }
+      }
+
+      // Return order with items
+      console.log('Fetching final order with items...');
+      const finalOrder = await this.orderRepository.findOne({
+        where: { id: savedOrder.id },
+        relations: ['items'],
+      });
+
+      if (!finalOrder) {
+        throw new NotFoundException('Order not found after creation');
+      }
+
+      console.log('Order created successfully:', finalOrder.id);
+      return finalOrder;
+    } catch (error) {
+      console.error('Error creating order:', error);
+      throw error;
     }
-
-    // Return order with items
-    const finalOrder = await this.orderRepository.findOne({
-      where: { id: savedOrder.id },
-      relations: ['items'],
-    });
-
-    if (!finalOrder) {
-      throw new NotFoundException('Order not found after creation');
-    }
-
-    return finalOrder;
   }
 
   private async createProductOrderItems(orderId: number, productItems: any[]): Promise<void> {
     const orderItems = productItems.map(item => {
       return this.orderItemRepository.create({
-        order: { id: orderId },
+        orderId: orderId,
         productId: item.productId,
         quantity: item.quantity,
         price: item.price,
@@ -96,7 +112,7 @@ export class OrdersService {
   private async createLotteryOrderItems(orderId: number, lotteryItems: any[]): Promise<void> {
     const orderItems = lotteryItems.map(item => {
       return this.orderItemRepository.create({
-        order: { id: orderId },
+        orderId: orderId,
         lotteryId: item.lotteryId,
         quantity: item.quantity,
         price: item.price,

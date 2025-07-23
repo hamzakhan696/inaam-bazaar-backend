@@ -36,15 +36,32 @@ export class OrdersController {
   })
   @ApiResponse({ status: 201, description: 'Order created successfully after payment verification' })
   async handleStripeSuccess(@Body() body: any) {
-    const { paymentIntentId, orderData } = body;
-    const paymentIntent = await this.stripeService.getPaymentIntent(paymentIntentId);
-    
-    if (paymentIntent.status === 'succeeded') {
-      // Set payment status to paid for successful Stripe payments
-      orderData.paymentStatus = 'paid';
-      return this.ordersService.create(orderData);
-    } else {
-      throw new Error('Payment not verified');
+    try {
+      const { paymentIntentId, orderData } = body;
+      
+      console.log('Processing Stripe success:', { paymentIntentId, orderData });
+      
+      const paymentIntent = await this.stripeService.getPaymentIntent(paymentIntentId);
+      
+      console.log('Payment intent status:', paymentIntent.status);
+      
+      if (paymentIntent.status === 'succeeded') {
+        // Set payment status to paid for successful Stripe payments
+        orderData.paymentStatus = 'paid';
+        
+        console.log('Creating order with data:', orderData);
+        
+        const order = await this.ordersService.create(orderData);
+        
+        console.log('Order created successfully:', order.id);
+        
+        return order;
+      } else {
+        throw new Error(`Payment not verified. Status: ${paymentIntent.status}`);
+      }
+    } catch (error) {
+      console.error('Error in handleStripeSuccess:', error);
+      throw error;
     }
   }
 
@@ -53,6 +70,24 @@ export class OrdersController {
   @ApiResponse({ status: 200, description: 'List of all orders' })
   async findAll() {
     return this.ordersService.findAll();
+  }
+
+  @Get('test')
+  @ApiOperation({ summary: 'Test database connection' })
+  @ApiResponse({ status: 200, description: 'Database connection test' })
+  async testConnection() {
+    try {
+      // Test basic database operations
+      const orderCount = await this.ordersService.findAll();
+      return {
+        message: 'Database connection successful',
+        orderCount: orderCount.length,
+        timestamp: new Date().toISOString()
+      };
+    } catch (error) {
+      console.error('Database test error:', error);
+      throw error;
+    }
   }
 
   @Get(':id')
