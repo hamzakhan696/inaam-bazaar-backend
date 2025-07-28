@@ -36,7 +36,7 @@ import { StripeModule } from './stripe/stripe.module';
         username: config.get<string>('DB_USERNAME'),
         password: config.get<string>('DB_PASSWORD'),
         database: config.get<string>('DB_DATABASE'),
-        synchronize: true,
+        synchronize: false,
         logging: true,
         entities
       }),

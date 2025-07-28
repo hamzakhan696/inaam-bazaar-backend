@@ -7,6 +7,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Product } from '../products/products.entity';
 import { Lottery } from '../lotteries/lotteries.entity';
 import { ProductInventory } from '../products/product-inventory.entity';
+import { CustomersService } from '../customers/customers.service';
+import { UserService } from '../user/user.service';
 
 @Injectable()
 export class OrdersService {
@@ -21,6 +23,8 @@ export class OrdersService {
     private lotteryRepository: Repository<Lottery>,
     @InjectRepository(ProductInventory)
     private productInventoryRepository: Repository<ProductInventory>,
+    private customersService: CustomersService,
+    private userService: UserService,
   ) {}
 
   async create(createOrderDto: CreateOrderDto): Promise<Order> {
@@ -38,10 +42,29 @@ export class OrdersService {
       }
     }
 
+    // --- Customer creation logic ---
+    let customerId: number | undefined = undefined;
+    // Try to find customer by firstName, lastName (and optionally contactNumber if you add it to Customer entity)
+    const user = await this.userService.findById?.(createOrderDto.userId);
+    if (!user) throw new BadRequestException('User not found');
+    // Try to find customer by name (and contactNumber if you add it to Customer entity)
+    const allCustomers = await this.customersService.findAll();
+    let customer = allCustomers.find(c => c.firstName === user.firstName && c.lastName === user.lastName);
+    if (!customer) {
+      // Create new customer from user data
+      customer = await this.customersService.create({
+        firstName: user.firstName,
+        lastName: user.lastName,
+        // You can add more fields if you add them to Customer entity
+      });
+    }
+    customerId = customer.id;
+    // --- End customer creation logic ---
+
     // Create order
     const order = this.orderRepository.create({
       orderNumber,
-      customerId: createOrderDto.userId, // Using userId as customerId for now
+      customerId: customerId,
       status: 'pending',
       orderType: createOrderDto.orderType,
       paymentMethod: createOrderDto.paymentMethod,

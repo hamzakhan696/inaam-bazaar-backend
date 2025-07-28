@@ -13,7 +13,7 @@ export class Product {
   @Column({ nullable: true })
   description: string;
 
-  @Column('json', { nullable: true })
+  @Column('json', { nullable: true, default: () => "'[]'" })
   images: { url: string, color: string }[];
 
   @Column('simple-array', { nullable: true })

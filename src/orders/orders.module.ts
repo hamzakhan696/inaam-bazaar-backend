@@ -8,6 +8,8 @@ import { Product } from '../products/products.entity';
 import { Lottery } from '../lotteries/lotteries.entity';
 import { ProductInventory } from '../products/product-inventory.entity';
 import { StripeModule } from '../stripe/stripe.module';
+import { CustomersModule } from '../customers/customers.module';
+import { UserModule } from '../user/user.module';
 
 @Module({
   imports: [
@@ -18,7 +20,9 @@ import { StripeModule } from '../stripe/stripe.module';
       Lottery, 
       ProductInventory
     ]),
-    StripeModule
+    StripeModule,
+    CustomersModule,
+    UserModule
   ],
   controllers: [OrdersController],
   providers: [OrdersService],

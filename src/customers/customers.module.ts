@@ -9,5 +9,6 @@ import { StorageModule } from '../storage/storage.module';
   imports: [TypeOrmModule.forFeature([Customer]), StorageModule],
   controllers: [CustomersController],
   providers: [CustomersService],
+  exports: [CustomersService],
 })
 export class CustomersModule {} 

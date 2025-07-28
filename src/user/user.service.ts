@@ -34,11 +34,22 @@ export class UserService {
     return this.userRepo.save(user);
   }
 
+  async updateById(id: number, updateDto: Partial<SignUpDto>) {
+    const user = await this.userRepo.findOne({ where: { id } });
+    if (!user) throw new Error('User not found');
+    Object.assign(user, updateDto);
+    return this.userRepo.save(user);
+  }
+
   async findByPhone(phone: string) {
     return this.userRepo.findOne({ where: { contactNumber: Number(phone) } });
   }
 
   async findAll() {
     return this.userRepo.find();
+  }
+
+  async findById(id: number) {
+    return this.userRepo.findOne({ where: { id } });
   }
 } 
